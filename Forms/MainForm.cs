@@ -34,6 +34,7 @@ namespace lab1
             textInfoManager = new TextInfoManager();
         }
 
+
         private void SubscribeToEvents()
         {
             richTextBox1.TextChanged += RichTextBox_TextChanged;
@@ -271,5 +272,6 @@ namespace lab1
         {
             this.Text = title;
         }
+
     }
 }
