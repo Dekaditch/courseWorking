@@ -14,7 +14,7 @@ namespace lab1
         private FileService fileService;
         private HelpManager helpManager;
         private TextInfoManager textInfoManager;
-        private LexicalManager lexicalManager;
+        private SyntaxManager syntaxManager;
 
         public MainForm()
         {
@@ -33,7 +33,7 @@ namespace lab1
             clipboardManager = new ClipboardManager();
             helpManager = new HelpManager();
             textInfoManager = new TextInfoManager();
-            lexicalManager = new LexicalManager(dataGridView1, richTextBox1);
+            syntaxManager = new SyntaxManager(dataGridView1, richTextBox1, lblErrorCount);
         }
 
 
@@ -161,7 +161,7 @@ namespace lab1
 
         private void startStrip_Click(object sender, EventArgs e)
         {
-            lexicalManager.RunAnalysis();
+            syntaxManager.RunAnalysis();
         }
 
         private void infoShowStrip_Click(object sender, EventArgs e)
@@ -220,7 +220,7 @@ namespace lab1
 
         private void runToolStrip_Click(object sender, EventArgs e)
         {
-           lexicalManager.RunAnalysis();
+            syntaxManager.RunAnalysis();
         }
 
         private void aboutToolStrip_Click(object sender, EventArgs e)

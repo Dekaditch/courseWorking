@@ -6,6 +6,7 @@
         /// Обязательная переменная конструктора.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private System.Windows.Forms.Label lblErrorCount;
 
         /// <summary>
         /// Освободить все используемые ресурсы.
@@ -28,6 +29,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.lblErrorCount = new System.Windows.Forms.Label();
+            this.lblErrorCount.AutoSize = true;
+            this.lblErrorCount.Location = new System.Drawing.Point(12, 262);
+            this.lblErrorCount.Name = "lblErrorCount";
+            this.lblErrorCount.Size = new System.Drawing.Size(150, 13);
+            this.lblErrorCount.TabIndex = 17;
+            this.lblErrorCount.Text = "Общее количество ошибок: 0";
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileStrip = new System.Windows.Forms.ToolStripMenuItem();
@@ -458,7 +466,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
-
+            this.Controls.Add(this.lblErrorCount);
             // 
             // Добавление обработчиков событий для меню "Файл"
             // 

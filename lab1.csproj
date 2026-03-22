@@ -108,6 +108,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SyntaxAnalysis\Parser.cs" />
+    <Compile Include="SyntaxAnalysis\SyntaxError.cs" />
+    <Compile Include="SyntaxAnalysis\SyntaxManager.cs" />
+    <Compile Include="SyntaxAnalysis\TokenStream.cs" />
     <EmbeddedResource Include="Forms\AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
       <SubType>Designer</SubType>

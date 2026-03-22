@@ -8,22 +8,22 @@ namespace lab1.LexicalAnalysis
 {
     public class Scanner
     {
-        private string input;              
-        private int position;              
-        private int line;                    
-        private int linePosition;            
-        private List<Token> tokens;         
-        private List<LexicalException> errors; 
+        private string input;
+        private int position;
+        private int line;
+        private int linePosition;
+        private List<Token> tokens;
 
         private HashSet<string> keywords = new HashSet<string>
         {
             "int", "return", "void", "char", "float",
+            "if", "else", "while", "for", "switch",
+            "case", "break", "continue", "default"
         };
 
         public Scanner()
         {
             tokens = new List<Token>();
-            errors = new List<LexicalException>();
         }
 
         public List<Token> Analyze(string text)
@@ -33,15 +33,34 @@ namespace lab1.LexicalAnalysis
             line = 1;
             linePosition = 1;
             tokens.Clear();
-            errors.Clear();
 
             while (position < input.Length)
             {
                 char current = input[position];
 
-                if (char.IsWhiteSpace(current))
+                if (current == ' ' || current == '\t')
                 {
-                    ProcessWhitespace();
+                    position++;
+                    linePosition++;
+                    continue;
+                }
+                else if (current == '\n')
+                {
+                    line++;
+                    linePosition = 1;
+                    position++;
+                    continue;
+                }
+                else if (current == '\r')
+                {
+                    position++;
+                    if (position < input.Length && input[position] == '\n')
+                    {
+                        line++;
+                        linePosition = 1;
+                        position++;
+                    }
+                    continue;
                 }
                 else if (char.IsLetter(current) || current == '_')
                 {
@@ -60,70 +79,11 @@ namespace lab1.LexicalAnalysis
             return tokens;
         }
 
-        private void ProcessWhitespace()
-        {
-            char current = input[position];
-            Token token = new Token
-            {
-                Line = line,
-                StartPosition = linePosition
-            };
-
-            if (current == ' ')
-            {
-                token.Type = TokenType.SPACE;
-                token.Value = " ";
-                token.EndPosition = linePosition;
-                position++;
-                linePosition++;
-            }
-            else if (current == '\t')
-            {
-                token.Type = TokenType.TAB;
-                token.Value = "\t";
-                token.EndPosition = linePosition;
-                position++;
-                linePosition++;
-            }
-            else if (current == '\n')
-            {
-                token.Type = TokenType.NEWLINE;
-                token.Value = "\\n";
-                token.EndPosition = linePosition;
-                position++;
-                line++;
-                linePosition = 1;
-            }
-            else if (current == '\r')
-            {
-                if (position + 1 < input.Length && input[position + 1] == '\n')
-                {
-                    token.Type = TokenType.NEWLINE;
-                    token.Value = "\\r\\n";
-                    token.EndPosition = linePosition + 1;
-                    position += 2;
-                    line++;
-                    linePosition = 1;
-                }
-                else
-                {
-                    token.Type = TokenType.UNKNOWN;
-                    token.Value = current.ToString();
-                    token.IsError = true;
-                    token.ErrorMessage = "Недопустимый символ";
-                    token.EndPosition = linePosition;
-                    position++;
-                    linePosition++;
-                }
-            }
-
-            tokens.Add(token);
-        }
-
         private void ProcessIdentifierOrKeyword()
         {
             int startPos = linePosition;
             int startIndex = position;
+            int startLine = line;
 
             while (position < input.Length &&
                   (char.IsLetterOrDigit(input[position]) || input[position] == '_'))
@@ -137,7 +97,7 @@ namespace lab1.LexicalAnalysis
             Token token = new Token
             {
                 Value = value,
-                Line = line,
+                Line = startLine,
                 StartPosition = startPos,
                 EndPosition = linePosition - 1
             };
@@ -164,6 +124,7 @@ namespace lab1.LexicalAnalysis
         {
             int startPos = linePosition;
             int startIndex = position;
+            int startLine = line;
             bool hasDecimalPoint = false;
 
             while (position < input.Length && char.IsDigit(input[position]))
@@ -190,7 +151,7 @@ namespace lab1.LexicalAnalysis
             Token token = new Token
             {
                 Value = value,
-                Line = line,
+                Line = startLine,
                 StartPosition = startPos,
                 EndPosition = linePosition - 1
             };
@@ -199,15 +160,17 @@ namespace lab1.LexicalAnalysis
             tokens.Add(token);
         }
 
-
         private void ProcessSymbol()
         {
             char current = input[position];
+            int startPos = linePosition;
+            int startLine = line;
+
             Token token = new Token
             {
-                Line = line,
-                StartPosition = linePosition,
-                EndPosition = linePosition
+                Line = startLine,
+                StartPosition = startPos,
+                EndPosition = startPos
             };
 
             if (position + 1 < input.Length)
@@ -217,14 +180,14 @@ namespace lab1.LexicalAnalysis
                 if (twoChar == "==" || twoChar == "!=" || twoChar == "<=" || twoChar == ">=")
                 {
                     token.Value = twoChar;
-                    token.EndPosition = linePosition + 1;
+                    token.EndPosition = startPos + 1;
 
                     switch (twoChar)
                     {
                         case "==": token.Type = TokenType.EQUAL; break;
                         case "!=": token.Type = TokenType.NOT_EQUAL; break;
-                        case "<=": token.Type = TokenType.LESS; break; 
-                        case ">=": token.Type = TokenType.GREATER; break; 
+                        case "<=": token.Type = TokenType.LESS; break;
+                        case ">=": token.Type = TokenType.GREATER; break;
                     }
 
                     position += 2;
@@ -243,7 +206,6 @@ namespace lab1.LexicalAnalysis
                 case '-': token.Type = TokenType.MINUS; break;
                 case '*': token.Type = TokenType.MULTIPLY; break;
                 case '/':
-
                     if (position + 1 < input.Length && input[position + 1] == '/')
                     {
                         ProcessComment();
@@ -275,6 +237,7 @@ namespace lab1.LexicalAnalysis
         {
             int startPos = linePosition;
             int startIndex = position;
+            int startLine = line;
 
             position += 2;
             linePosition += 2;
@@ -291,20 +254,12 @@ namespace lab1.LexicalAnalysis
             {
                 Type = TokenType.COMMENT,
                 Value = value,
-                Line = line,
+                Line = startLine,
                 StartPosition = startPos,
                 EndPosition = linePosition - 1
             };
 
             tokens.Add(token);
         }
-
-
-        public List<LexicalException> GetErrors()
-        {
-            return errors;
-        }
-
-        public bool HasErrors => errors.Count > 0;
     }
 }
