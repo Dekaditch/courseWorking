@@ -101,15 +101,43 @@ int calc(int a, int b) {
 };  
 
 2 Разработанная грамматика
-Определим грамматику создания функции языка C/C++ G[<FTYPE>] в нотации Хомского с продукциями P:  
-<img width="301" height="403" alt="image" src="https://github.com/user-attachments/assets/28e8d941-be97-442e-98ac-c6b5a1ef6baa" />  
+Определим грамматику создания функции языка C/C++ G[\<FTYPE>] в нотации Хомского с продукциями P:  
+
+1 \<FTYPE> → 'type' \<FSPACE>   
+2 \<FSPACE> → '\_' \<FID>   
+3 \<FID> → 'id' \<OPENQ>  
+4 \<OPENQ> → '(' \<PTYPE>  
+5 \<PTYPE> → 'type' \<PSPACE>  
+6 \<PSPACE> → 'space'  \<PID>  
+7 \<PID> → 'id' \<COMMA> | 'id' \<CLOSEQ>  
+8 \<COMMA> → ',' \<PTYPE>  
+9 \<CLOSEQ> → ')' \<OPENF>  
+10 \<OPENF> → '{' \<RETURN>  
+12 \<RETURN> → 'return' \<BSPACE>  
+13 \<BSPACE> → '\_' \<BSPACE>  
+14 \<BSPACE> → \<E> <COLON>  
+15 \<COLON> → ';' \<CLOSEF>  
+16 \<CLOSEF> → '}' \<COLONEND>  
+14 \<E> → \<T> \<A>  
+15 \<A> → '+' \<T> \<A> | '-' \<T> \<A> | ε  
+16 \<T> → \<O> \<B>  
+17 \<B> → '*' \<O> \<B> | '/' \<O> \<B> | ε  
+18 \<O> → 'id' (\<E>)  
+19 \<COLONEND> → ';'  
+20 \<IDENTIFIER> → 'letter' \<INDENTIFIER_REM>  
+21 \<IDENTIFIER> → 'letter' | 'digit' | ε  
+'Id' = \<IDENTIFIER>    
+'letter' -> ‘a’ | ‘b’ | … | ‘z’ | ‘A’ | ‘B’ | … | ‘Z’  
+'digit' -> ‘0’ | ‘1’ | … | ‘9’  
+'type' -> ‘int’ | ‘float’  
+  
 Следуя введенному формальному определению грамматики, представим G[<FTYPE>] ее составляющими:  
 <img width="1069" height="67" alt="image" src="https://github.com/user-attachments/assets/5ac7a93d-a380-4613-a166-2eab57d21eee" />  
 
 
 3 Классификация грамматики  
 Согласно классификации Хомского, полученная порождающая грамматика G[<F>] соответствует типу контекстно-свободных, так как правая часть каждой редукции начинается либо с терминального символа, либо с нетерминального, принадлежащего объединённому словарю.  
-A →a, A∈ V_N  , a∈ V^* .  
+A → a, A ∈ V_N  , a ∈ V^* .  
 Грамматика G[<F>] не является автоматной, так как не все её редукции начинаются с терминального символа. По этой же причине данная грамматика не является S - грамматикой.    
 
 4 Метод анализа  
