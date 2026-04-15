@@ -153,7 +153,7 @@ int calc(int a, int b) {
 3 \<FID> → 'id' \<OPENQ>  
 4 \<OPENQ> → '(' \<PTYPE>  
 5 \<PTYPE> → 'type' \<PSPACE>  
-6 \<PSPACE> → 'space'  \<PID>  
+6 \<PSPACE> → '\_'  \<PID>  
 7 \<PID> → 'id' \<COMMA> | 'id' \<CLOSEQ>  
 8 \<COMMA> → ',' \<PTYPE>  
 9 \<CLOSEQ> → ')' \<OPENF>  
