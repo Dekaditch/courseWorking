@@ -20,7 +20,7 @@ namespace lab1.Managers
         public SyntaxManager(DataGridView dataGridView, RichTextBox editorTextBox, Label errorCountLabel = null)
         {
             this.scanner = new Scanner();
-            this.parser = new Parser();
+            this.parser = new Parser(new List<Token>()); // или добавить пустой конструктор
             this.dataGridView = dataGridView;
             this.editorTextBox = editorTextBox;
             this.errorCountLabel = errorCountLabel;
@@ -70,7 +70,11 @@ namespace lab1.Managers
 
                 List<Token> tokens = scanner.Analyze(text);
 
-                List<SyntaxError> syntaxErrors = parser.Parse(text, tokens);
+                parser = new Parser(tokens);
+                parser.ParseProgram();
+                List<SyntaxError> syntaxErrors = parser.Errors;
+
+
 
                 foreach (SyntaxError error in syntaxErrors)
                 {
@@ -150,7 +154,7 @@ namespace lab1.Managers
                 int charIndex = 0;
                 for (int i = 0; i < line - 1; i++)
                 {
-                    charIndex += lines[i].Length + 1; 
+                    charIndex += lines[i].Length + 1;
                 }
                 return charIndex + (position - 1);
             }

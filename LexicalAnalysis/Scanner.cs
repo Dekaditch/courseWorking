@@ -75,7 +75,14 @@ namespace lab1.LexicalAnalysis
                     ProcessSymbol();
                 }
             }
-
+            tokens.Add(new Token
+            {
+                Type = TokenType.EOF,
+                Value = "EOF",
+                Line = line,
+                StartPosition = linePosition,
+                EndPosition = linePosition
+            });
             return tokens;
         }
 
