@@ -1,299 +1,200 @@
-﻿using System;
+﻿using lab1.LexicalAnalysis;
+using lab1.SyntaxAnalysis;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using lab1.LexicalAnalysis;
 
-namespace lab1.SyntaxAnalysis
+namespace lab1
 {
     public class Parser
     {
-        private List<Token> tokens;
-        private int position;
-        private List<SyntaxError> errors;
-        private string originalText;
+        private readonly List<Token> _tokens;
+        private int _pos = 0;
+        private const int MAX_ERRORS = 3;
+        private bool _exprError = false;
 
-        public Parser()
+        public List<SyntaxError> Errors { get; } = new List<SyntaxError>();
+
+        private Token Current =>
+            _pos < _tokens.Count ? _tokens[_pos] : new Token { Type = TokenType.UNKNOWN, Value = "EOF" };
+
+        public Parser(List<Token> tokens)
         {
-            errors = new List<SyntaxError>();
+            _tokens = tokens;
         }
 
-        public List<SyntaxError> Parse(string text, List<Token> tokensList)
+        private void Error(string msg)
         {
-            originalText = text;
-            tokens = tokensList;
-            position = 0;
-            errors.Clear();
-
-            try
-            {
-                ParseFTYPE();
-
-                if (position < tokens.Count)
-                {
-                    Token current = tokens[position];
-                    AddError("конец программы", current.Line, current.StartPosition,
-                        current.Value, GetTokenStartIndex(current));
-                }
-            }
-            catch (Exception ex)
-            {
-                errors.Add(new SyntaxError(ex.Message, 1, 1, "Критическая ошибка анализа", 0));
-            }
-
-            return errors;
+            if (Errors.Count >= MAX_ERRORS) return;
+            var t = Current;
+            Errors.Add(new SyntaxError(t.Value, t.Line, t.StartPosition, msg, t.StartPosition));
+            _exprError = true;
         }
 
-        private Token Current => position < tokens.Count ? tokens[position] : null;
-        private bool IsEnd => position >= tokens.Count;
-        private void Advance() => position++;
-
-        private bool Check(TokenType type) => Current != null && Current.Type == type;
-
-        private bool Match(TokenType type)
+        private void InsertFake(string lexeme, TokenType type = TokenType.IDENTIFIER)
         {
-            if (Check(type))
+            var fake = new Token
             {
-                Advance();
-                return true;
+                Type = type,
+                Value = lexeme,
+                Line = Current.Line,
+                StartPosition = Current.StartPosition,
+                EndPosition = Current.EndPosition
+            };
+            _tokens.Insert(_pos, fake);
+        }
+
+        private void IronError(string expected, string fake, TokenType type = TokenType.IDENTIFIER)
+        {
+            Error($"Ожидалось {expected}");
+            InsertFake(fake, type);
+
+            if (_pos < _tokens.Count)
+            {
+                _pos++; 
+                if (_pos < _tokens.Count)
+                    _pos++; 
             }
-            return false;
         }
 
         private void ParseFTYPE()
         {
-            if (!Check(TokenType.KW_INT) && !Check(TokenType.KW_FLOAT))
-            {
-                AddError("'int' или 'float'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "начало", GetTokenStartIndex(Current));
-                SkipToNextKeyword();
-                return;
-            }
-            Advance(); 
-            ParseFSPACE();
-        }
+            if (Current.Type == TokenType.KW_INT || Current.Type == TokenType.KW_FLOAT)
+                _pos++;
+            else
+                IronError("'int' или 'float'", "int", TokenType.KW_INT);
 
-        private void ParseFSPACE()
-        {
             ParseFID();
         }
 
         private void ParseFID()
         {
-            if (Check(TokenType.IDENTIFIER))
-            {
-                Advance(); 
-                ParseOPENQ();
-            }
+            if (Current.Type == TokenType.IDENTIFIER)
+                _pos++;
             else
             {
-                AddError("идентификатор", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                SkipToNextIdentifier();
+                IronError("идентификатор", "func");
+                if (_pos < _tokens.Count && Current.Type != TokenType.LPAREN)
+                    _pos++;
             }
+
+            ParseOPENQ();
         }
+
 
         private void ParseOPENQ()
         {
-            if (Match(TokenType.LPAREN))
-            {
-                ParsePTYPE();
-            }
+            if (Current.Type == TokenType.LPAREN)
+                _pos++;
             else
-            {
-                AddError("'('", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                SkipToChar('(');
-                if (Match(TokenType.LPAREN))
-                {
-                    ParsePTYPE();
-                }
-            }
+                IronError("'('", "(", TokenType.LPAREN);
+
+            ParsePTYPE();
         }
 
         private void ParsePTYPE()
         {
-            if (!Check(TokenType.KW_INT) && !Check(TokenType.KW_FLOAT))
-            {
-                AddError("'int' или 'float'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                SkipToNextKeyword();
-                return;
-            }
-            Advance(); 
-            ParsePSPACE();
-        }
+            if (Current.Type == TokenType.KW_INT || Current.Type == TokenType.KW_FLOAT)
+                _pos++;
+            else
+                IronError("'int' или 'float'", "int", TokenType.KW_INT);
 
-        private void ParsePSPACE()
-        {
             ParsePID();
         }
 
         private void ParsePID()
         {
-            if (Check(TokenType.IDENTIFIER))
+            if (Current.Type == TokenType.IDENTIFIER)
             {
-                Advance(); 
-
-                if (Check(TokenType.COMMA))
-                {
-                    ParseCOMMA();
-                }
-                else if (Check(TokenType.RPAREN))
-                {
-                    ParseCLOSEQ();
-                }
-                else
-                {
-                    AddError("',' или ')'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                        Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                    SkipToChar(',', ')');
-                    if (Check(TokenType.COMMA))
-                    {
-                        ParseCOMMA();
-                    }
-                    else if (Check(TokenType.RPAREN))
-                    {
-                        ParseCLOSEQ();
-                    }
-                }
+                _pos++;
             }
             else
             {
-                AddError("идентификатор", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
+                IronError("идентификатор", "x");
+                while (_pos < _tokens.Count &&
+                       Current.Type != TokenType.COMMA &&
+                       Current.Type != TokenType.RPAREN)
+                {
+                    _pos++;
+                }
             }
+
+            if (Current.Type == TokenType.COMMA)
+                ParseCOMMA();
+            else
+                ParseCLOSEQ();
         }
+
+
 
         private void ParseCOMMA()
         {
-            if (Match(TokenType.COMMA))
-            {
-                ParsePTYPE();
-            }
+            if (Current.Type == TokenType.COMMA)
+                _pos++;
             else
-            {
-                AddError("','", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-            }
+                IronError("','", ",", TokenType.COMMA);
+
+            ParsePTYPE();
         }
 
         private void ParseCLOSEQ()
         {
-            if (Match(TokenType.RPAREN))
-            {
-                ParseOPENF();
-            }
+            if (Current.Type == TokenType.RPAREN)
+                _pos++;
             else
-            {
-                AddError("')'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                SkipToChar(')');
-                if (Match(TokenType.RPAREN))
-                {
-                    ParseOPENF();
-                }
-            }
+                IronError("')'", ")", TokenType.RPAREN);
+
+            ParseOPENF();
         }
 
         private void ParseOPENF()
         {
-            if (Match(TokenType.LBRACE))
-            {
-                ParseRETURN();
-            }
+            if (Current.Type == TokenType.LBRACE)
+                _pos++;
             else
-            {
-                AddError("'{'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                SkipToChar('{');
-                if (Match(TokenType.LBRACE))
-                {
-                    ParseRETURN();
-                }
-            }
+                IronError("'{'", "{", TokenType.LBRACE);
+
+            ParseRETURN();
         }
 
         private void ParseRETURN()
         {
-            if (Match(TokenType.KW_RETURN))
-            {
-                ParseBSPACE();
-            }
+            if (Current.Type == TokenType.KW_RETURN)
+                _pos++;
             else
-            {
-                AddError("'return'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                SkipToKeyword("return");
-                if (Match(TokenType.KW_RETURN))
-                {
-                    ParseBSPACE();
-                }
-            }
-        }
-        private void ParseBSPACE()
-        {
-            if (Check(TokenType.IDENTIFIER) || Check(TokenType.INTEGER) ||
-                Check(TokenType.FLOAT) || Check(TokenType.LPAREN))
-            {
-                ParseE();
-                ParseCOLON();
-            }
-            else
-            {
-                ParseCOLON();
-            }
+                IronError("'return'", "return", TokenType.KW_RETURN);
+
+            ParseE();
+            ParseCOLON();
         }
 
         private void ParseCOLON()
         {
-            if (Match(TokenType.SEMICOLON))
-            {
-                ParseCLOSEF();
-            }
+            if (Current.Type == TokenType.SEMICOLON)
+                _pos++;
             else
-            {
-                AddError("';'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                SkipToChar(';');
-                if (Match(TokenType.SEMICOLON))
-                {
-                    ParseCLOSEF();
-                }
-            }
+                IronError("';'", ";", TokenType.SEMICOLON);
+
+            ParseCLOSEF();
         }
 
         private void ParseCLOSEF()
         {
-            if (Match(TokenType.RBRACE))
-            {
-                ParseEND();
-            }
+            if (Current.Type == TokenType.RBRACE)
+                _pos++;
             else
-            {
-                AddError("'}'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                SkipToChar('}');
-                if (Match(TokenType.RBRACE))
-                {
-                    ParseEND();
-                }
-            }
+                IronError("'}'", "}", TokenType.RBRACE);
+
+            ParseCOLONEND();
         }
 
-        private void ParseEND()
+        private void ParseCOLONEND()
         {
-            if (Match(TokenType.SEMICOLON))
-            {
-                // Успешно
-            }
+            if (Current.Type == TokenType.SEMICOLON)
+                _pos++;
             else
-            {
-                AddError("';'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-            }
+                IronError("';'", ";", TokenType.SEMICOLON);
         }
+
 
         private void ParseE()
         {
@@ -303,13 +204,15 @@ namespace lab1.SyntaxAnalysis
 
         private void ParseA()
         {
-            if (Match(TokenType.PLUS))
+            if (Current.Type == TokenType.PLUS)
             {
+                _pos++;
                 ParseT();
                 ParseA();
             }
-            else if (Match(TokenType.MINUS))
+            else if (Current.Type == TokenType.MINUS)
             {
+                _pos++;
                 ParseT();
                 ParseA();
             }
@@ -317,139 +220,74 @@ namespace lab1.SyntaxAnalysis
 
         private void ParseT()
         {
-            ParseF();
+            ParseO();
             ParseB();
         }
 
         private void ParseB()
         {
-            if (Match(TokenType.MULTIPLY))
+            if (Current.Type == TokenType.MULTIPLY)
             {
-                ParseF();
+                _pos++;
+                ParseO();
                 ParseB();
             }
-            else if (Match(TokenType.DIVIDE))
+            else if (Current.Type == TokenType.DIVIDE)
             {
-                ParseF();
+                _pos++;
+                ParseO();
                 ParseB();
             }
         }
 
-        private void ParseF()
+        private void ParseO()
         {
-            if (Check(TokenType.IDENTIFIER))
+            if (Current.Type == TokenType.IDENTIFIER)
             {
-                Advance(); 
-                if (Check(TokenType.LPAREN))
+                _pos++;
+                if (Current.Type == TokenType.LPAREN)
                 {
-                    Match(TokenType.LPAREN);
+                    _pos++;
                     ParseE();
-                    if (!Match(TokenType.RPAREN))
-                    {
-                        AddError("')'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                            Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                    }
+                    if (Current.Type == TokenType.RPAREN)
+                        _pos++;
+                    else
+                        IronError("')'", ")", TokenType.RPAREN);
                 }
             }
-            else if (Check(TokenType.INTEGER) || Check(TokenType.FLOAT))
+            else if (Current.Type == TokenType.INTEGER || Current.Type == TokenType.FLOAT)
             {
-                Advance(); 
+                _pos++;
             }
-            else if (Match(TokenType.LPAREN))
+            else if (Current.Type == TokenType.LPAREN) 
             {
+                _pos++;
                 ParseE();
-                if (!Match(TokenType.RPAREN))
-                {
-                    AddError("')'", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                        Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                }
+                if (Current.Type == TokenType.RPAREN)
+                    _pos++;
+                else
+                    IronError("')'", ")", TokenType.RPAREN);
             }
             else
             {
-                AddError("идентификатор, число или '('", Current?.Line ?? 1, Current?.StartPosition ?? 1,
-                    Current?.Value ?? "конец", GetTokenStartIndex(Current));
-                if (Current != null)
-                {
-                    Advance();
-                }
+                IronError("идентификатор, число или '('", "x");
+                if (_pos < _tokens.Count && Current.Type != TokenType.RPAREN)
+                    _pos++;
             }
         }
 
-
-        private void SkipToNextKeyword()
+        public void ParseProgram()
         {
-            while (!IsEnd)
+            _pos = 0;
+            Errors.Clear();
+
+            ParseFTYPE();
+
+            if (_pos < _tokens.Count && Current.Type != TokenType.EOF)
             {
-                if (Check(TokenType.KW_INT) || Check(TokenType.KW_FLOAT) ||
-                    Check(TokenType.KW_RETURN))
-                {
-                    return;
-                }
-                Advance();
+                Error("Лишние токены после конца программы");
             }
         }
 
-        private void SkipToNextIdentifier()
-        {
-            while (!IsEnd)
-            {
-                if (Check(TokenType.IDENTIFIER))
-                {
-                    return;
-                }
-                Advance();
-            }
-        }
-
-        private void SkipToChar(params char[] chars)
-        {
-            while (!IsEnd)
-            {
-                if (Current != null && Current.Value.Length == 1)
-                {
-                    char currentChar = Current.Value[0];
-                    if (chars.Contains(currentChar))
-                    {
-                        return;
-                    }
-                }
-                Advance();
-            }
-        }
-
-        private void SkipToKeyword(string keyword)
-        {
-            while (!IsEnd)
-            {
-                if (Current != null && Current.Value == keyword)
-                {
-                    return;
-                }
-                Advance();
-            }
-        }
-
-        private int GetTokenStartIndex(Token token)
-        {
-            if (token == null) return -1;
-
-            string[] lines = originalText.Split('\n');
-            if (token.Line <= lines.Length)
-            {
-                int charIndex = 0;
-                for (int i = 0; i < token.Line - 1; i++)
-                {
-                    charIndex += lines[i].Length + 1;
-                }
-                return charIndex + (token.StartPosition - 1);
-            }
-            return -1;
-        }
-
-        private void AddError(string expected, int line, int position, string fragment, int startIndex)
-        {
-            string description = $"Ожидалось: {expected}";
-            errors.Add(new SyntaxError(fragment, line, position, description, startIndex));
-        }
     }
 }
