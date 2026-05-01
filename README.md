@@ -148,33 +148,32 @@ int calc(int a, int b) {
 2 Разработанная грамматика
 Определим грамматику создания функции языка C/C++ G[\<FTYPE>] в нотации Хомского с продукциями P:  
 
-1 \<FTYPE> → 'type' \<FSPACE>   
+1 \<FTYPE> → TYPE \<FSPACE>   
 2 \<FSPACE> → '\_' \<FID>   
-3 \<FID> → 'id' \<OPENQ>  
+3 \<FID> → IDENTIFIER \<OPENQ>  
 4 \<OPENQ> → '(' \<PTYPE>  
-5 \<PTYPE> → 'type' \<PSPACE>  
+5 \<PTYPE> → TYPE \<PSPACE>  
 6 \<PSPACE> → '\_'  \<PID>  
-7 \<PID> → 'id' \<COMMA> | 'id' \<CLOSEQ>  
+7 \<PID> → IDENTIFIER \<COMMA> | IDENTIFIER \<CLOSEQ>  
 8 \<COMMA> → ',' \<PTYPE>  
 9 \<CLOSEQ> → ')' \<OPENF>  
 10 \<OPENF> → '{' \<RETURN>  
 12 \<RETURN> → 'return' \<BSPACE>  
 13 \<BSPACE> → '\_' \<BSPACE>  
-14 \<BSPACE> → \<E> <COLON>  
+14 \<BSPACE> → \<E> \<COLON>  
 15 \<COLON> → ';' \<CLOSEF>  
 16 \<CLOSEF> → '}' \<COLONEND>  
 14 \<E> → \<T> \<A>  
 15 \<A> → '+' \<T> \<A> | '-' \<T> \<A> | ε  
 16 \<T> → \<O> \<B>  
 17 \<B> → '*' \<O> \<B> | '/' \<O> \<B> | ε  
-18 \<O> → 'id' (\<E>)  
+18 \<O> → 'id' '('\<E>')'  
 19 \<COLONEND> → ';'  
-20 \<IDENTIFIER> → 'letter' \<INDENTIFIER_REM>  
-21 \<IDENTIFIER> → 'letter' | 'digit' | ε  
-'Id' = \<IDENTIFIER>    
-'letter' -> ‘a’ | ‘b’ | … | ‘z’ | ‘A’ | ‘B’ | … | ‘Z’  
-'digit' -> ‘0’ | ‘1’ | … | ‘9’  
-'type' -> ‘int’ | ‘float’  
+20 \IDENTIFIER → letter \<INDENTIFIER_REM>  
+21 \<IDENTIFIER_REM> → letter | digit | ε  
+letter -> ‘a’ | ‘b’ | … | ‘z’ | ‘A’ | ‘B’ | … | ‘Z’  
+digit -> ‘0’ | ‘1’ | … | ‘9’  
+TYPE -> ‘int’ | ‘float’ | 'double' | 'long'   
   
 Следуя введенному формальному определению грамматики, представим G[\<FTYPE>] ее составляющими:  
 <img width="1069" height="67" alt="image" src="https://github.com/user-attachments/assets/5ac7a93d-a380-4613-a166-2eab57d21eee" />  
