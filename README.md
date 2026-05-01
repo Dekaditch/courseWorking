@@ -169,7 +169,7 @@ int calc(int a, int b) {
 17 \<B> → '*' \<O> \<B> | '/' \<O> \<B> | ε  
 18 \<O> → 'id' '('\<E>')'  
 19 \<COLONEND> → ';'  
-20 \IDENTIFIER → letter \<INDENTIFIER_REM>  
+20 IDENTIFIER → letter \<INDENTIFIER_REM>  
 21 \<IDENTIFIER_REM> → letter | digit | ε  
 letter -> ‘a’ | ‘b’ | … | ‘z’ | ‘A’ | ‘B’ | … | ‘Z’  
 digit -> ‘0’ | ‘1’ | … | ‘9’  
