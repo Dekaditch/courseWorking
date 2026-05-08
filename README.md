@@ -132,7 +132,8 @@ int calc(int a, int b) {
 Постановка задачи.
 Разработать синтаксический анализатор (парсер) в соответствии с индивидуальным вариантом курсовой работы, интегрировать его в приложение из лабораторной работы №1 и обеспечить наглядный вывод результатов анализа.  
 
-Вариант работы - 78 (Создание функции языка C/C++)  
+Вариант работы - 78 (Создание функции языка C/C++)   
+Правильные примеры  
 int sum(int x, int y, int z) {
     return x + (y * z);
 };
@@ -148,33 +149,32 @@ int calc(int a, int b) {
 2 Разработанная грамматика
 Определим грамматику создания функции языка C/C++ G[\<FTYPE>] в нотации Хомского с продукциями P:  
 
-1 \<FTYPE> → 'type' \<FSPACE>   
+1 \<FTYPE> → TYPE \<FSPACE>   
 2 \<FSPACE> → '\_' \<FID>   
-3 \<FID> → 'id' \<OPENQ>  
+3 \<FID> → IDENTIFIER \<OPENQ>  
 4 \<OPENQ> → '(' \<PTYPE>  
-5 \<PTYPE> → 'type' \<PSPACE>  
+5 \<PTYPE> → TYPE \<PSPACE>  
 6 \<PSPACE> → '\_'  \<PID>  
-7 \<PID> → 'id' \<COMMA> | 'id' \<CLOSEQ>  
+7 \<PID> → IDENTIFIER \<COMMA> | IDENTIFIER \<CLOSEQ>  
 8 \<COMMA> → ',' \<PTYPE>  
 9 \<CLOSEQ> → ')' \<OPENF>  
 10 \<OPENF> → '{' \<RETURN>  
 12 \<RETURN> → 'return' \<BSPACE>  
 13 \<BSPACE> → '\_' \<BSPACE>  
-14 \<BSPACE> → \<E> <COLON>  
+14 \<BSPACE> → \<E> \<COLON>  
 15 \<COLON> → ';' \<CLOSEF>  
 16 \<CLOSEF> → '}' \<COLONEND>  
-14 \<E> → \<T> \<A>  
-15 \<A> → '+' \<T> \<A> | '-' \<T> \<A> | ε  
-16 \<T> → \<O> \<B>  
-17 \<B> → '*' \<O> \<B> | '/' \<O> \<B> | ε  
-18 \<O> → 'id' (\<E>)  
-19 \<COLONEND> → ';'  
-20 \<IDENTIFIER> → 'letter' \<INDENTIFIER_REM>  
-21 \<IDENTIFIER> → 'letter' | 'digit' | ε  
-'Id' = \<IDENTIFIER>    
-'letter' -> ‘a’ | ‘b’ | … | ‘z’ | ‘A’ | ‘B’ | … | ‘Z’  
-'digit' -> ‘0’ | ‘1’ | … | ‘9’  
-'type' -> ‘int’ | ‘float’  
+17 \<E> → \<T> \<A>  
+18 \<A> → '+' \<T> \<A> | '-' \<T> \<A> | ε  
+19 \<T> → \<O> \<B>  
+20 \<B> → '*' \<O> \<B> | '/' \<O> \<B> | ε  
+21 \<O> → 'id' '('\<E>')'  
+22 \<COLONEND> → ';'  
+23 IDENTIFIER → letter \<INDENTIFIER_REM>  
+24 \<IDENTIFIER_REM> → letter | digit | ε  
+letter -> ‘a’ | ‘b’ | … | ‘z’ | ‘A’ | ‘B’ | … | ‘Z’  
+digit -> ‘0’ | ‘1’ | … | ‘9’  
+TYPE -> ‘int’ | ‘float’ | 'double' | 'long'   
   
 Следуя введенному формальному определению грамматики, представим G[\<FTYPE>] ее составляющими:  
 <img width="1069" height="67" alt="image" src="https://github.com/user-attachments/assets/5ac7a93d-a380-4613-a166-2eab57d21eee" />  
@@ -192,7 +192,14 @@ A → a, A ∈ V_N  , a ∈ V^* .
 На рисунке представлен список процедур и последовательность их вызова.  
 <img width="480" height="644" alt="image" src="https://github.com/user-attachments/assets/8706cb39-bfdd-4152-8c8f-517f063bef21" />  
 
+5 Метод Айронса  
 
+Разрабатываемый синтаксический анализатор основан на контекстно-свободной грамматике. При обнаружении лексемы, не соответствующей грамматике, применяется метод нейтрализации ошибки, заключающийся в последовательном удалении символов входной цепочки до тех пор, пока следующий символ не станет допустимым для текущего состояния разбора.  
+
+6 Примеры работы программы  
+<img width="802" height="482" alt="Снимок экрана 2026-05-08 234922" src="https://github.com/user-attachments/assets/ab97e86f-c2b0-49c0-b85c-b045c9a19537" />  
+<img width="802" height="482" alt="Снимок экрана 2026-05-08 234949" src="https://github.com/user-attachments/assets/5dc8e41a-d495-4c9b-9c5d-0fc868d05056" />  
+<img width="802" height="481" alt="image" src="https://github.com/user-attachments/assets/7ea876d8-14da-483d-9f2b-a8bf52a780b3" />  
 
 
 
