@@ -92,9 +92,18 @@ namespace lab1.LexicalAnalysis
             int startIndex = position;
             int startLine = line;
 
+            bool hasInvalidChar = false;
+
             while (position < input.Length &&
-                  (char.IsLetterOrDigit(input[position]) || input[position] == '_'))
+                   !char.IsWhiteSpace(input[position]) &&
+                   !IsSeparator(input[position]))
             {
+                if (!char.IsLetterOrDigit(input[position]) &&
+                    input[position] != '_')
+                {
+                    hasInvalidChar = true;
+                }
+
                 position++;
                 linePosition++;
             }
@@ -109,14 +118,31 @@ namespace lab1.LexicalAnalysis
                 EndPosition = linePosition - 1
             };
 
-            if (keywords.Contains(value))
+            if (hasInvalidChar)
+            {
+                token.Type = TokenType.UNKNOWN;
+                token.IsError = true;
+                token.ErrorMessage = $"Недопустимая последовательность '{value}'";
+            }
+            else if (keywords.Contains(value))
             {
                 switch (value)
                 {
-                    case "int": token.Type = TokenType.KW_INT; break;
-                    case "return": token.Type = TokenType.KW_RETURN; break;
-                    case "float": token.Type = TokenType.KW_FLOAT; break;
-                    default: token.Type = TokenType.IDENTIFIER; break;
+                    case "int":
+                        token.Type = TokenType.KW_INT;
+                        break;
+
+                    case "return":
+                        token.Type = TokenType.KW_RETURN;
+                        break;
+
+                    case "float":
+                        token.Type = TokenType.KW_FLOAT;
+                        break;
+
+                    default:
+                        token.Type = TokenType.IDENTIFIER;
+                        break;
                 }
             }
             else
@@ -126,7 +152,23 @@ namespace lab1.LexicalAnalysis
 
             tokens.Add(token);
         }
-
+        private bool IsSeparator(char c)
+        {
+            return c == '=' ||
+                   c == '+' ||
+                   c == '-' ||
+                   c == '*' ||
+                   c == '/' ||
+                   c == '(' ||
+                   c == ')' ||
+                   c == '{' ||
+                   c == '}' ||
+                   c == ';' ||
+                   c == ',' ||
+                   c == '<' ||
+                   c == '>' ||
+                   c == '!';
+        }
         private void ProcessNumber()
         {
             int startPos = linePosition;

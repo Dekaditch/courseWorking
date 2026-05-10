@@ -9,6 +9,7 @@ namespace lab1
     {
         private List<Token> _tokens;
         private int _index;
+        private bool _panicMode;
 
         public List<SyntaxError> Errors { get; } = new List<SyntaxError>();
 
@@ -24,7 +25,6 @@ namespace lab1
 
             _tokens = new List<Token>();
 
-            // Проверка на null
             if (tokens == null || tokens.Count == 0)
             {
                 AddError(null, "Пустой ввод");
@@ -64,6 +64,7 @@ namespace lab1
             {
                 AddError(Current, "Лишние токены после конца программы");
             }
+            _panicMode = false;
         }
 
 
@@ -81,18 +82,35 @@ namespace lab1
 
         private void Match(TokenType expected, params TokenType[] followSet)
         {
-            if (Current != null && Current.Type == expected)
+            if (Current == null)
+                return;
+
+            if (_panicMode && Current.Type == TokenType.EOF)
+                return;
+
+            if (Current.Type == expected)
             {
                 _index++;
+                _panicMode = false;
                 return;
             }
 
-            var token = Current;
-
             AddError(
-                token,
-                $"Ожидался {expected}, найден {token?.Type}"
+                Current,
+                $"Ожидался {expected}, найден {Current.Type}"
             );
+
+            if (Current.Type == TokenType.EOF)
+            {
+                _panicMode = true;
+                return;
+            }
+
+            if (followSet != null &&
+                followSet.Contains(Current.Type))
+            {
+                return;
+            }
 
             Recover(expected, followSet);
         }
@@ -126,18 +144,8 @@ namespace lab1
             {
                 _index += 2;
                 return;
+
             }
-
-
-            if (followSet != null)
-            {
-                foreach (var follow in followSet)
-                {
-                    if (current.Type == follow)
-                        return;
-                }
-            }
-
             while (Current != null &&
                    Current.Type != TokenType.EOF)
             {
@@ -204,40 +212,66 @@ namespace lab1
                 TokenType.EOF
             );
         }
-        private void ParseType()
+        private bool ParseType()
         {
             if (Current?.Type == TokenType.KW_INT ||
                 Current?.Type == TokenType.KW_FLOAT)
             {
                 _index++;
-                return;
+                return true;
             }
 
-            Match(
-                TokenType.KW_INT,
-                TokenType.IDENTIFIER
+            AddError(
+                Current,
+                $"Ожидался KW_INT, KW_FLOAT, найден {Current?.Type}"
             );
+
+            return false;
         }
         private void ParseParameters()
         {
-            if (Current == null)
+            if (Current == null || Current.Type == TokenType.EOF)
                 return;
 
             if (Current.Type == TokenType.RPAREN)
+            {
+                AddError(Current, "Функция должна иметь минимум 1 параметр");
                 return;
+            }
 
             ParseParameter();
 
             while (Current != null &&
-                   Current.Type == TokenType.COMMA)
+                   Current.Type != TokenType.RPAREN &&
+                   Current.Type != TokenType.LBRACE &&
+                   Current.Type != TokenType.EOF)
             {
-                Match(
-                    TokenType.COMMA,
-                    TokenType.KW_INT,
-                    TokenType.KW_FLOAT
-                );
+                if (Current.Type == TokenType.COMMA)
+                {
+                    Match(TokenType.COMMA);
+                    ParseParameter();
+                }
+                else
+                {
+                    AddError(Current,
+                        $"Ожидался COMMA, найден {Current.Type}");
 
-                ParseParameter();
+                    while (Current != null &&
+                           Current.Type != TokenType.COMMA &&
+                           Current.Type != TokenType.RPAREN &&
+                           Current.Type != TokenType.LBRACE &&
+                           Current.Type != TokenType.EOF)
+                    {
+                        _index++;
+                    }
+
+                    if (Current != null &&
+                        Current.Type == TokenType.COMMA)
+                    {
+                        Match(TokenType.COMMA);
+                        ParseParameter();
+                    }
+                }
             }
         }
 
@@ -245,11 +279,14 @@ namespace lab1
         {
             ParseType();
 
-            Match(
-                TokenType.IDENTIFIER,
-                TokenType.COMMA,
-                TokenType.RPAREN
-            );
+            if (Current != null && Current.Type == TokenType.IDENTIFIER)
+            {
+                _index++;
+            }
+            else
+            {
+                AddError(Current, $"Ожидался IDENTIFIER, найден {Current?.Type}");
+            }
         }
 
 
@@ -283,7 +320,8 @@ namespace lab1
 
         private void ParseFactor()
         {
-            if (Current == null)
+            if (Current == null ||
+                Current.Type == TokenType.EOF)
                 return;
 
             if (Current.Type == TokenType.IDENTIFIER ||
