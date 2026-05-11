@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using lab1.LexicalAnalysis;
 using lab1.SyntaxAnalysis;
@@ -112,6 +113,15 @@ namespace lab1
                 return;
             }
 
+            if ((expected == TokenType.KW_RETURN || expected == TokenType.KW_INT || 
+                expected == TokenType.KW_FLOAT || expected == TokenType.IDENTIFIER) &&
+        Current.Type == TokenType.UNKNOWN &&
+        !string.IsNullOrEmpty(Current.Value))
+            {
+                    _index++;
+                    return; 
+            }
+
             Recover(expected, followSet);
         }
 
@@ -146,12 +156,26 @@ namespace lab1
                 return;
 
             }
-            while (Current != null &&
-                   Current.Type != TokenType.EOF)
+            while (Current != null && Current.Type != TokenType.EOF)
             {
-                if (followSet != null &&
-                    followSet.Contains(Current.Type))
+                if (followSet != null && followSet.Contains(Current.Type))
                     break;
+
+                if (Current.Type == TokenType.UNKNOWN &&
+                    !string.IsNullOrEmpty(Current.Value))
+                {
+                    string lowerValue = Current.Value.ToLower();
+                    if (lowerValue.StartsWith("r") ||
+                        lowerValue.Contains("ret") ||
+                        lowerValue == "re" ||
+                        lowerValue == "ret" ||
+                        lowerValue == "retu" ||
+                        lowerValue == "retur" ||
+                        lowerValue == "return")
+                    {
+                        break;
+                    }
+                }
 
                 _index++;
             }
@@ -187,13 +211,25 @@ namespace lab1
                 TokenType.KW_RETURN
             );
 
-            Match(
-                TokenType.KW_RETURN,
-                TokenType.IDENTIFIER,
-                TokenType.INTEGER,
-                TokenType.FLOAT,
-                TokenType.LPAREN
-            );
+            if (Current.Type == TokenType.UNKNOWN &&
+        !string.IsNullOrEmpty(Current.Value) &&
+        Current.Value.ToLower().Contains("ret"))
+            {
+                AddError(Current, $"Ожидался KW_RETURN, найден {Current.Type}");
+                _index++; 
+                _panicMode = false;
+            }
+            else
+            {
+                Match(
+                    TokenType.KW_RETURN,
+                    TokenType.IDENTIFIER,
+                    TokenType.INTEGER,
+                    TokenType.FLOAT,
+                    TokenType.LPAREN,
+                    TokenType.UNKNOWN
+                );
+            }
 
             ParseExpression();
 
@@ -220,12 +256,15 @@ namespace lab1
                 _index++;
                 return true;
             }
-
-            AddError(
-                Current,
-                $"Ожидался KW_INT, KW_FLOAT, найден {Current?.Type}"
-            );
-
+            
+            else if (Current != null && Current.Type != TokenType.EOF)
+            {
+                AddError(
+                    Current,
+                    $"Ожидался KW_INT, KW_FLOAT, найден {Current?.Type}"
+                );
+                _index++;
+            }
             return false;
         }
         private void ParseParameters()
@@ -358,7 +397,7 @@ namespace lab1
             AddError(
                 Current,
                 $"Ожидалось выражение, найден {Current.Type}"
-            );
+            );              
 
             Recover(
                 TokenType.IDENTIFIER,
