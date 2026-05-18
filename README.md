@@ -349,6 +349,8 @@ Name -	string -	Имя идентификатора
 name — имя идентификатора  
   
 Пример: x, y, counter  
+  
+Рисунок CST / AST для верной строки в графическом редакторе Draw.io  
 <img width="405" height="350" alt="image" src="https://github.com/user-attachments/assets/786f57a4-b2e9-4e7e-a645-c3123ef3f5bc" />  
 Пример работы программы  
 <img width="999" height="446" alt="image" src="https://github.com/user-attachments/assets/67f71db5-23c5-4c4f-af8c-35f48921a092" />  
