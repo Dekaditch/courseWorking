@@ -43,6 +43,12 @@ namespace lab1
             richTextBox1.SelectionChanged += RichTextBox_SelectionChanged;
         }
 
+        private void OpenCompilerForm()
+        {
+            var compilerForm = new lab1.Forms.CompilerForm();
+            compilerForm.Show();
+        }
+
         private void SetupShortcutKeys()
         {
             this.KeyPreview = true;
@@ -273,5 +279,9 @@ namespace lab1
             this.Text = title;
         }
 
+        private void openCompilerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenCompilerForm();
+        }
     }
 }
