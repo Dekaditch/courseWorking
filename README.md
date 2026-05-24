@@ -1,4 +1,4 @@
-﻿﻿Лабораторная работа 1. Разработка пользовательского интерфейса (GUI) для языкового процессора  
+﻿Лабораторная работа 1. Разработка пользовательского интерфейса (GUI) для языкового процессора  
   ---
 Цель работы.  
 Создание кроссплатформенного графического интерфейса (GUI) для языкового процессора в виде специализированного текстового редактора.
@@ -81,7 +81,7 @@
 Ограничения: нет.  
 
 ---
-Лабораторная работа 2. Разработка лексического анализатора (сканера)  
+# Лабораторная работа 2. Разработка лексического анализатора (сканера)  
 ---
 Постановка задачи.
 Разработать лексический анализатор (сканер) в соответствии с индивидуальным вариантом задания, интегрировать его в приложение из лабораторной работы №1 и обеспечить наглядный вывод результатов.  
@@ -364,3 +364,51 @@ name — имя идентификатора
 Инструкция по запуску.  
 Запустите с помощью exe файла или просто скомпилируйте код. Введите верную конструкцию функции и запустите анализ на кнопку пуск. 
 После успешного анализа нажмите самые праве кнопки. Последняя кнопка открывает визуальную AST, а предпоследняя открывает текстовое представление AST.
+
+
+
+Лабораторная работа 6. Создание внутренней формы представления программы  
+---
+Студент группы АВТ-314  
+Болтенков Е.О.  
+
+Вариант C\C++  
+Определение КС грамматики  
+
+  1. <expression> → <term> <add>  
+	2. <add> → ε | + <term> <add> | - <term> <add>  
+	3. <term> → <operand> <mult>  
+	4. <mult> → ε | * <operand> <mult> | / <operand> <mult> | % <operand> <mult>  
+	5. <operand> → <num> | <id> | ( <expression> )  
+	6. <id> → letter {letter | digit | _}  
+	7. <num> → <integer> | <double>   
+	8. <integer> → digit-0 <int> | 0  
+	9. <int> → ε | digit <int>  
+	10. <double> → <int> . <int>  
+  letter → a..z A..Z  
+	digit → 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9  
+	digit-0 → 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9  
+
+Корректные входные строки  
+1 + 2 * 3;  
+25 / 5 - 5;  
+((g-h)*2)/((i+j)-k);  
+
+Диаграмма лексера  
+<img width="488" height="732" alt="image" src="https://github.com/user-attachments/assets/9174534d-c052-41b2-91e9-f16d7e1afe8b" />  
+Рекурсивный спуск  
+<img width="391" height="237" alt="image" src="https://github.com/user-attachments/assets/e6e21893-82d8-4935-957d-1d1042c32fe6" />  
+
+Примеры работы программы  
+<img width="490" height="643" alt="image" src="https://github.com/user-attachments/assets/40bbe343-6190-49e3-a496-df9c03ae51c9" />  
+<img width="648" height="228" alt="image" src="https://github.com/user-attachments/assets/e078c78c-c10c-4093-86d5-d5beffb5e129" />  
+<img width="288" height="243" alt="image" src="https://github.com/user-attachments/assets/b9cf2c9d-598d-4a9e-84bc-57f59c8625ba" />  
+<img width="481" height="224" alt="image" src="https://github.com/user-attachments/assets/4e9411e3-80a1-4d13-9fa9-3633f52acb6e" />  
+<img width="596" height="310" alt="image" src="https://github.com/user-attachments/assets/433a4fc6-2184-4fcd-9b27-65bdda48aa64" />  
+<img width="529" height="263" alt="image" src="https://github.com/user-attachments/assets/016e96b0-035d-4810-b622-48742feb168f" />  
+<img width="468" height="338" alt="image" src="https://github.com/user-attachments/assets/5338cc4f-c3b0-4569-bcb9-241f0d2974e6" />  
+<img width="532" height="240" alt="image" src="https://github.com/user-attachments/assets/3798d6fe-8c3f-48b1-a1a1-6c5cfbf8dc38" />  
+
+
+
+
